@@ -1,0 +1,89 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+model artist {
+    id           Int            @id @unique(map: "id_UNIQUE") @default(autoincrement())
+    name         String?        @unique(map: "name_UNIQUE") @db.VarChar(45)
+    artist_has_genre artist_has_genre[]
+    music_letter music_letter[]
+}
+
+model coments {
+    id              Int          @unique(map: "id_UNIQUE") @default(autoincrement())
+    coment          String?      @db.VarChar(250)
+    users_id        Int
+    music_letter_id Int
+    music_letter    music_letter @relation(fields: [music_letter_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_coments_music_letter1")
+    users           users        @relation(fields: [users_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_coments_users")
+
+    @@id([id, users_id, music_letter_id])
+    @@index([music_letter_id], map: "fk_coments_music_letter1_idx")
+    @@index([users_id], map: "fk_coments_users_idx")
+}
+
+model favorites {
+    users_id        Int
+    music_letter_id Int
+    music_letter    music_letter @relation(fields: [music_letter_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_has_music_letter_music_letter1")
+    users           users        @relation(fields: [users_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_has_music_letter_users1")
+
+    @@id([users_id, music_letter_id])
+    @@index([music_letter_id], map: "fk_users_has_music_letter_music_letter1_idx")
+    @@index([users_id], map: "fk_users_has_music_letter_users1_idx")
+}
+
+model genre {
+    id           Int            @id @unique(map: "id_UNIQUE") @default(autoincrement())
+    genre        String?        @unique(map: "genre_UNIQUE") @db.VarChar(45)
+     artist_has_genre artist_has_genre[]
+    music_letter music_letter[]
+}
+
+model music_letter {
+    id           Int         @unique(map: "id_UNIQUE") @default(autoincrement())
+    name         String      @db.VarChar(100)
+    songwriter   String?     @db.VarChar(200)
+    music_letter String?     @db.Text
+    video_link   String?     @db.VarChar(500)
+    users_id     Int
+    genre_id     Int
+    artist_id    Int
+    artist       artist      @relation(fields: [artist_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_music_letter_artist1")
+    genre        genre       @relation(fields: [genre_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_music_letter_genre1")
+    users        users       @relation(fields: [users_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_music_letter_users1")
+    coments      coments[]
+    favorites    favorites[]
+
+    @@id([id, users_id, genre_id, artist_id])
+    @@index([artist_id], map: "fk_music_letter_artist1_idx")
+    @@index([genre_id], map: "fk_music_letter_genre1_idx")
+    @@index([users_id], map: "fk_music_letter_users1_idx")
+}
+
+model users {
+    id           Int            @id @unique(map: "id_UNIQUE") @default(autoincrement())
+    name         String         @db.VarChar(45)
+    cpf          String         @unique(map: "cpf_UNIQUE") @db.VarChar(45)
+    email        String         @unique(map: "email_UNIQUE") @db.VarChar(45)
+    password     String         @db.VarChar(1500)
+    coments      coments[]
+    favorites    favorites[]
+    music_letter music_letter[]
+}
+
+model artist_has_genre {
+  artist_id Int
+  genre_id  Int
+  artist    artist @relation(fields: [artist_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_artist_has_genre_artist1")
+  genre     genre  @relation(fields: [genre_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_artist_has_genre_genre1")
+
+  @@id([artist_id, genre_id])
+  @@index([artist_id], map: "fk_artist_has_genre_artist1_idx")
+  @@index([genre_id], map: "fk_artist_has_genre_genre1_idx")
+}
